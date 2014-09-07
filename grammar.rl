@@ -22,7 +22,9 @@
         temp_str = std::string(ts, fpc - ts);
         current_block.subblock = atoi(temp_str.c_str());
     }
-    action start_block_number { ts = fpc; }
+    action start_block_number {
+        ts = fpc;
+    }
     action end_block_number {
         temp_str = std::string(ts, fpc - ts);
         current_block.number = atoi(temp_str.c_str());
@@ -77,12 +79,13 @@ void VprPlacementParser::init() {
 
 void VprPlacementParser::ragel_parse(std::istream &in_stream) {
     bool done = false;
+    bool final_pass = false;
     int i = 0;
     have = 0;
-    while ( !done ) {
+    while (!done) {
         /* How much space is in the buffer? */
         int space = _BUFSIZE - have;
-        if ( space == 0 ) {
+        if (space == 0) {
             /* Buffer is full. */
             cerr << "TOKEN TOO BIG" << endl;
             exit(1);
@@ -94,11 +97,25 @@ void VprPlacementParser::ragel_parse(std::istream &in_stream) {
         char *pe = p + len;
         char *eof = 0;
 
-        /* If no data was read indicate EOF. */
-        if ( len == 0 ) {
-            eof = pe;
-            done = true;
-        } else {
+        if (len == 0) {
+            if (!final_pass) {
+                /* After last character has been read from stream, insert two
+                 * additional new-line characters to make sure the most
+                 * recently parsed line is parsed to completion.  This prevents
+                 * missing the last block line when there is no blank line at
+                 * the end of the input stream. */
+                len = 2;
+                *p = '\n';
+                *(p + 1) = '\n';
+                pe = p + len;
+                final_pass = true;
+            } else {
+                /* We've reached the end of the input stream, so indicate EOF. */
+                eof = pe;
+                done = true;
+            }
+        }
+        if (!done) {
             %% write exec;
 
             if ( cs == VprPlacementParser_error ) {
@@ -112,8 +129,7 @@ void VprPlacementParser::ragel_parse(std::istream &in_stream) {
             } else {
                 /* There is a prefix to preserve, shift it over. */
                 have = pe - ts;
-                memmove( buf, ts, have );
-                te = buf + (te-ts);
+                memmove(buf, ts, have);
                 ts = buf;
             }
         }

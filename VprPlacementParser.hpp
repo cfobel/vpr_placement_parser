@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <stdexcept>
 #include <map>
 #include <set>
 #include <vector>
