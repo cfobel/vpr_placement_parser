@@ -56,6 +56,10 @@ class VprPlacementParser {
   Block current_block;
 public:
   vector<Block> blocks;
+  string netlist_file;
+  string architecture_file;
+  int x_dim;
+  int y_dim;
 
   VprPlacementParser() { buf_vector = vector<char>(DEF_BUFSIZE); }
   VprPlacementParser(int buffer_size) {

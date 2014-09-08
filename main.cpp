@@ -7,6 +7,12 @@ int main(int argc, char const* argv[]) {
   VprPlacementFileParser parser(argv[1]);
   parser.init();
   parser.parse();
+  std::cout << std::setw(24) << "Netlist: " << parser.netlist_file
+    << std::endl;
+  std::cout << std::setw(24) << "Architecture: " << parser.architecture_file
+    << std::endl;
+  std::cout << std::setw(24) << "Dimensions: " << parser.x_dim << "x"
+    << parser.y_dim << std::endl;
   std::cout << "Parsed " << parser.blocks.size() << " blocks." << std::endl;
 
   std::cout << std::endl;

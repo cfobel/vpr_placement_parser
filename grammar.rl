@@ -36,6 +36,20 @@
     action end_emptyline {}
     action end_firstline {}
     action end_arraysizeline {}
+    action start_x_dim { ts = fpc; }
+    action start_y_dim { ts = fpc; }
+    action start_netlist { ts = fpc; }
+    action start_architecture { ts = fpc; }
+    action end_x_dim {
+        temp_str = std::string(ts, fpc - ts);
+        x_dim = atoi(temp_str.c_str());
+    }
+    action end_y_dim {
+        temp_str = std::string(ts, fpc - ts);
+        y_dim = atoi(temp_str.c_str());
+    }
+    action end_netlist { netlist_file = std::string(ts, fpc - ts); }
+    action end_architecture { architecture_file = std::string(ts, fpc - ts); }
 
     # Words in a line.
     word = ^[ \t\n]+;
@@ -48,14 +62,18 @@
     y = digit+ >start_y %end_y;
     subblock = digit+ >start_subblock %end_subblock;
     block_number = digit+ >start_block_number %end_block_number;
+    x_dim = digit+ >start_x_dim %end_x_dim;
+    y_dim = digit+ >start_y_dim %end_y_dim;
+    netlist = word >start_netlist %end_netlist; 
+    architecture = word >start_architecture %end_architecture;
 
     separator = ('\\\n' | whitespace);
 
     comment = ( '#' (whitespace* word)** ) %end_comment;
     endofline = ( comment? whitespace* '\n' );
     emptyline = whitespace* endofline %end_emptyline;
-    firstline = ('Netlist file:' whitespace+ word whitespace+ 'Architecture file:' whitespace+ word endofline) %end_firstline;
-    arraysizeline = ('Array size:' whitespace+ digit+ whitespace+ 'x' whitespace+ digit+ whitespace+ 'logic blocks' endofline) %end_arraysizeline;
+    firstline = ('Netlist file:' whitespace+ netlist whitespace+ 'Architecture file:' whitespace+ architecture endofline) %end_firstline;
+    arraysizeline = ('Array size:' whitespace+ x_dim whitespace+ 'x' whitespace+ y_dim whitespace+ 'logic blocks' endofline) %end_arraysizeline;
 
     block = (block_name whitespace+ x whitespace+ y
              whitespace+ subblock whitespace+ '#' block_number '\n') %end_block;
@@ -70,6 +88,8 @@
 /* Regal data: end ***********************************/
 
 void VprPlacementParser::init() {
+    x_dim = 0;
+    y_dim = 0;
     buf = &buf_vector[0];
     _BUFSIZE = buf_vector.size() - 1;
 
